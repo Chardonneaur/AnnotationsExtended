@@ -1,0 +1,228 @@
+{% extends 'admin.twig' %}
+
+{% block content %}
+<div class="annotations-extended">
+    <h2>Annotations Manager</h2>
+
+    <div class="toolbar">
+        <button type="button" class="btn" id="addBtn">+ Add Annotation</button>
+        <div class="export-buttons">
+            <a href="{{ linkTo({'module': 'AnnotationsExtended', 'action': 'export', 'format': 'csv'}) }}" class="btn">Export CSV</a>
+            <a href="{{ linkTo({'module': 'AnnotationsExtended', 'action': 'export', 'format': 'json'}) }}" class="btn">Export JSON</a>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3 id="modalTitle">Add Annotation</h3>
+            <form id="annotationForm">
+                <input type="hidden" id="editIdNote" value="">
+                <input type="hidden" id="editIdSite" value="">
+
+                <div class="form-group">
+                    <label for="siteSelect">Site *</label>
+                    <select id="siteSelect" class="form-control" required>
+                        <option value="">Select a site...</option>
+                        {% for idSite, name in sites %}
+                        <option value="{{ idSite }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="dateInput">Date *</label>
+                    <input type="date" id="dateInput" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="noteInput">Note *</label>
+                    <textarea id="noteInput" class="form-control" rows="3" maxlength="255" required></textarea>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label for="starredInput">
+                        <input type="checkbox" id="starredInput" name="starred" value="1">
+                        <span>Starred</span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn" id="saveBtn">Save</button>
+                    <button type="button" class="btn-flat" id="cancelBtn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Annotations Table -->
+    <div class="card">
+        <div class="card-content">
+            {% if annotations is empty %}
+                <p>No annotations found.</p>
+            {% else %}
+                <table class="entityTable dataTable" id="annotationsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Site</th>
+                            <th>Note</th>
+                            <th>Starred</th>
+                            <th>User</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for annotation in annotations %}
+                        <tr data-id="{{ annotation.id }}" data-idsite="{{ annotation.idsite }}">
+                            <td>{{ annotation.date }}</td>
+                            <td>{{ annotation.site_name }}</td>
+                            <td class="note-cell">{{ annotation.note }}</td>
+                            <td>
+                                {% if annotation.starred %}
+                                    <span class="starred">&#9733;</span>
+                                {% else %}
+                                    <span class="not-starred">&#9734;</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ annotation.user }}</td>
+                            <td class="actions">
+                                {% if annotation.canEdit %}
+                                    <a href="#" class="edit-btn"
+                                       data-id="{{ annotation.id }}"
+                                       data-idsite="{{ annotation.idsite }}"
+                                       data-date="{{ annotation.date }}"
+                                       data-note="{{ annotation.note|e('html_attr') }}"
+                                       data-starred="{{ annotation.starred ? '1' : '0' }}">Edit</a>
+                                    |
+                                    <a href="#" class="delete-btn"
+                                       data-id="{{ annotation.id }}"
+                                       data-idsite="{{ annotation.idsite }}">Delete</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var modal = document.getElementById('modal');
+    var form = document.getElementById('annotationForm');
+    var isEditing = false;
+
+    // Add button
+    document.getElementById('addBtn').addEventListener('click', function() {
+        isEditing = false;
+        document.getElementById('modalTitle').textContent = 'Add Annotation';
+        document.getElementById('editIdNote').value = '';
+        document.getElementById('editIdSite').value = '';
+        document.getElementById('siteSelect').value = '';
+        document.getElementById('siteSelect').disabled = false;
+        document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+        document.getElementById('noteInput').value = '';
+        document.getElementById('starredInput').checked = false;
+        modal.style.display = 'flex';
+    });
+
+    // Edit buttons
+    document.querySelectorAll('.edit-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            isEditing = true;
+            document.getElementById('modalTitle').textContent = 'Edit Annotation';
+            document.getElementById('editIdNote').value = this.dataset.id;
+            document.getElementById('editIdSite').value = this.dataset.idsite;
+            document.getElementById('siteSelect').value = this.dataset.idsite;
+            document.getElementById('siteSelect').disabled = true;
+            document.getElementById('dateInput').value = this.dataset.date;
+            document.getElementById('noteInput').value = this.dataset.note;
+            document.getElementById('starredInput').checked = this.dataset.starred === '1';
+            modal.style.display = 'flex';
+        });
+    });
+
+    // Cancel button
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+    // Close modal on outside click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Save form
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var formData = new FormData();
+        formData.append('module', 'AnnotationsExtended');
+
+        if (isEditing) {
+            formData.append('action', 'save');
+            formData.append('idNote', document.getElementById('editIdNote').value);
+            formData.append('idSite', document.getElementById('editIdSite').value);
+        } else {
+            formData.append('action', 'add');
+            formData.append('idSite', document.getElementById('siteSelect').value);
+        }
+
+        formData.append('date', document.getElementById('dateInput').value);
+        formData.append('note', document.getElementById('noteInput').value);
+        formData.append('starred', document.getElementById('starredInput').checked ? 1 : 0);
+
+        fetch('index.php', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(function(err) {
+            alert('Error saving annotation');
+        });
+    });
+
+    // Delete buttons
+    document.querySelectorAll('.delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!confirm('Delete this annotation?')) return;
+
+            var formData = new FormData();
+            formData.append('module', 'AnnotationsExtended');
+            formData.append('action', 'delete');
+            formData.append('idNote', this.dataset.id);
+            formData.append('idSite', this.dataset.idsite);
+
+            fetch('index.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}

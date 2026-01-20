@@ -1,0 +1,10 @@
+{
+    "name": "AnnotationsExtended",
+    "description": "Extended annotations management with a full admin UI to view, add, edit, delete and export all annotations.",
+    "version": "1.0.0",
+    "theme": false,
+    "require": {
+        "piwik": ">=5.0.0-b1,<6.0.0-b1"
+    },
+    "license": "GPL v3+"
+}
