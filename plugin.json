@@ -1,10 +1,30 @@
 {
     "name": "AnnotationsExtended",
     "description": "Extended annotations management with a full admin UI to view, add, edit, delete and export all annotations.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "theme": false,
     "require": {
-        "piwik": ">=5.0.0-b1,<6.0.0-b1"
+        "matomo": ">=5.0.0-b1,<6.0.0-b1",
+        "php": ">=8.1.0"
     },
-    "license": "GPL v3+"
+    "authors": [
+        {
+            "name": "Chardonneaur",
+            "homepage": "https://github.com/Chardonneaur"
+        }
+    ],
+    "license": "GPL-3.0+",
+    "homepage": "https://github.com/Chardonneaur/AnnotationsExtended",
+    "keywords": [
+        "annotations",
+        "notes",
+        "export",
+        "admin",
+        "management",
+        "csv"
+    ],
+    "support": {
+        "issues": "https://github.com/Chardonneaur/AnnotationsExtended/issues",
+        "source": "https://github.com/Chardonneaur/AnnotationsExtended"
+    }
 }

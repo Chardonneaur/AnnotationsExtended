@@ -113,6 +113,7 @@
 (function() {
     var modal = document.getElementById('modal');
     var form = document.getElementById('annotationForm');
+    var nonce = '{{ nonce|e("js") }}';
     var isEditing = false;
 
     // Add button
@@ -165,6 +166,8 @@
         var formData = new FormData();
         formData.append('module', 'AnnotationsExtended');
 
+        formData.append('nonce', nonce);
+
         if (isEditing) {
             formData.append('action', 'save');
             formData.append('idNote', document.getElementById('editIdNote').value);
@@ -205,6 +208,7 @@
             var formData = new FormData();
             formData.append('module', 'AnnotationsExtended');
             formData.append('action', 'delete');
+            formData.append('nonce', nonce);
             formData.append('idNote', this.dataset.id);
             formData.append('idSite', this.dataset.idsite);
 

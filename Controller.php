@@ -4,6 +4,7 @@ namespace Piwik\Plugins\AnnotationsExtended;
 
 use Piwik\Access;
 use Piwik\Common;
+use Piwik\Nonce;
 use Piwik\Piwik;
 use Piwik\View;
 use Piwik\Plugins\Annotations\API as AnnotationsAPI;
@@ -12,6 +13,8 @@ use Piwik\Plugins\SitesManager\API as SitesManagerAPI;
 
 class Controller extends \Piwik\Plugin\ControllerAdmin
 {
+    const NONCE_NAME = 'AnnotationsExtended.write';
+
     public function index(): string
     {
         AnnotationsExtended::checkAccess();
@@ -23,6 +26,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         $this->setBasicVariablesView($view);
         $view->annotations = $annotations;
         $view->sites = $sites;
+        $view->nonce = Nonce::getNonce(self::NONCE_NAME);
 
         return $view->render();
     }
@@ -33,6 +37,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
 
         try {
             AnnotationsExtended::checkAccess();
+            Nonce::checkNonce(self::NONCE_NAME, Common::getRequestVar('nonce', '', 'string'));
 
             $idSite = Common::getRequestVar('idSite', 0, 'int');
             $date = Common::getRequestVar('date', '', 'string');
@@ -40,7 +45,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
             $starred = Common::getRequestVar('starred', '0', 'string') === '1';
 
             if ($idSite <= 0 || empty($date) || empty(trim($note))) {
-                echo json_encode(['success' => false, 'error' => 'Site, date and note are required']);
+                echo json_encode(['success' => false, 'error' => Piwik::translate('AnnotationsExtended_SiteDateNoteRequired')]);
                 exit;
             }
 
@@ -63,6 +68,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
 
         try {
             AnnotationsExtended::checkAccess();
+            Nonce::checkNonce(self::NONCE_NAME, Common::getRequestVar('nonce', '', 'string'));
 
             $idSite = Common::getRequestVar('idSite', 0, 'int');
             $idNote = Common::getRequestVar('idNote', 0, 'int');
@@ -71,7 +77,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
             $starred = Common::getRequestVar('starred', '0', 'string') === '1';
 
             if ($idSite <= 0 || $idNote <= 0) {
-                echo json_encode(['success' => false, 'error' => 'Invalid annotation']);
+                echo json_encode(['success' => false, 'error' => Piwik::translate('AnnotationsExtended_InvalidAnnotation')]);
                 exit;
             }
 
@@ -92,12 +98,13 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
 
         try {
             AnnotationsExtended::checkAccess();
+            Nonce::checkNonce(self::NONCE_NAME, Common::getRequestVar('nonce', '', 'string'));
 
             $idSite = Common::getRequestVar('idSite', 0, 'int');
             $idNote = Common::getRequestVar('idNote', 0, 'int');
 
             if ($idSite <= 0 || $idNote <= 0) {
-                echo json_encode(['success' => false, 'error' => 'Invalid annotation']);
+                echo json_encode(['success' => false, 'error' => Piwik::translate('AnnotationsExtended_InvalidAnnotation')]);
                 exit;
             }
 
